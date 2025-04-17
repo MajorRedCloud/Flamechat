@@ -1,4 +1,4 @@
-# AI Appointment Assistant (React Native Expo App)
+# AI Agent for Appointment Assistance (React Native Expo App)
 
 ## Overview
 
