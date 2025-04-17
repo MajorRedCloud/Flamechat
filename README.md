@@ -1,50 +1,86 @@
-# Welcome to your Expo app 👋
+# AI Appointment Assistant (React Native Expo App)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## Overview
 
-## Get started
+This project is a React Native mobile application built with Expo and TypeScript, designed to interact with an AI-powered backend assistant. Users can chat with the assistant to ask questions about company policies or services and book appointments through natural language conversation. The app features a clean user interface, session management, and a booking confirmation modal.
 
-1. Install dependencies
+## Features
 
-   ```bash
-   npm install
-   ```
+*   **Bottom Tab Navigation:** Easy switching between Home and Chat screens.
+*   **Home Screen:** Displays information about the application's purpose, workflow, and the technology stack used.
+*   **Chat Screen:**
+    *   Interactive chat interface powered by `react-native-gifted-chat`.
+    *   Real-time messaging with the backend AI assistant.
+    *   Handles appointment booking requests via chat.
+    *   Displays loading indicators during backend communication.
+    *   Manages chat sessions for conversation context.
+    *   "Clear Chat" functionality to reset the conversation.
+*   **Booking Confirmation Modal:** Displays details of a successfully booked appointment.
+*   **Styling:** Clean and modern UI using NativeWind (Tailwind CSS for React Native).
 
-2. Start the app
+## Technology Stack
 
-   ```bash
+*   **Frontend:**
+    *   React Native
+    *   Expo (Managed Workflow)
+    *   TypeScript
+    *   React Navigation (Bottom Tabs)
+    *   NativeWind
+    *   React Native Gifted Chat
+*   **Backend (Pre-existing):**
+    *   Python / Flask
+    *   Vercel Serverless Functions
+    *   **API Endpoint:** `https://flask-backend-vercel.vercel.app/chat`
+*   **AI / NLP:**
+    *   Google Gemini (with Function Calling)
+*   **Database:**
+    *   NeonDB (Serverless PostgreSQL for bookings)
+    *   Pinecone (Vector DB for RAG Q&A)
+
+## Screenshots
+
+*(Add screenshots here once the UI is developed)*
+
+*   *Home Screen*
+*   *Chat Screen*
+*   *Booking Modal*
+
+## Prerequisites
+
+*   [Node.js](https://nodejs.org/) (LTS version recommended)
+*   [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
+*   [Expo Go](https://expo.dev/go) app on your iOS or Android device (for testing on physical devices)
+*   Alternatively: [Android Studio](https://developer.android.com/studio) / [Xcode](https://developer.apple.com/xcode/) for simulators/emulators
+*   [Git](https://git-scm.com/) (for cloning the repository)
+
+## Setup and Installation
+
+1.  **Clone the repository (if applicable):**
+    ```bash
+    git clone <your-repository-url>
+    cd <your-project-directory>
+    ```
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    # or
+    yarn install
+    ```
+
+## Running the Application
+
+1.  **Start the Expo development server:**
+    ```bash
     npx expo start
-   ```
+    ```
+2.  **Run on a device or simulator:**
+    *   **iOS Simulator:** Press `i` in the terminal where Expo CLI is running.
+    *   **Android Emulator:** Press `a` in the terminal. (Ensure an emulator is running via Android Studio).
+    *   **Physical Device:** Scan the QR code displayed in the terminal using the Expo Go app on your phone (ensure your phone and computer are on the same Wi-Fi network).
 
-In the output, you'll find options to open the app in a
+## Backend Note
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+This frontend application connects to a pre-existing backend API deployed on Vercel:
+`https://flask-backend-vercel.vercel.app/chat`
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+No backend setup is required for this frontend project, as long as the Vercel deployment is active.
