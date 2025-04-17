@@ -22,9 +22,10 @@ export default function TabLayout() {
         tabBarInactiveTintColor: inactiveTabColor,  // Inactive label color (matches inactive stroke)
         tabBarStyle: {
           backgroundColor: tabBarBgColor,
-          borderTopWidth: 0,
+          borderTopWidth: 0.5,
           paddingBottom: 0,
           height: 54,
+          borderColor: '#111827', // Tailwind gray-700
         },
         tabBarItemStyle: {
            paddingVertical: 8,
