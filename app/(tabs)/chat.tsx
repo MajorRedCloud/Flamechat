@@ -1,8 +1,9 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { SafeAreaView, StatusBar, StyleSheet, View, Text, TouchableOpacity, KeyboardAvoidingView, Platform  } from 'react-native';
+import {StatusBar, StyleSheet, View, Text, TouchableOpacity, KeyboardAvoidingView, Platform  } from 'react-native';
 import { GiftedChat, IMessage, User, Bubble, InputToolbar, Composer, Send } from 'react-native-gifted-chat';
 import { Ionicons } from '@expo/vector-icons'; // Import icons
 import { getReplyFromServer } from '@/lib/serverActions';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Define the structure for our user objects
 interface ChatUser extends User {
@@ -73,32 +74,45 @@ const ChatScreen = () => {
             "sessionId": sessionId
         }
 
-        // 4. Call the server action to get a response
-        const reply = await getReplyFromServer(payload)
+        try {
+            // 4. Call the server action to get a response
+            const reply = await getReplyFromServer(payload)
 
-        // 5. Set sessionId if it is null
-        if (sessionId === null) {
-            setSessionId(reply.sessionId)
+            // 5. Set sessionId 
+            setSessionId(reply.session_id)
+            
+            // 6. Create the assistant's message object
+            const assistantMessage: IMessage = {
+                _id: Math.random().toString(36).substring(7), // Generate unique ID
+                text: reply.reply,
+                createdAt: new Date(),
+                user: assistantUser, // Use the predefined assistant user
+            };
+
+            // 7. Append the assistant's message
+            setMessages((previousMessages) =>
+                GiftedChat.append(previousMessages, [assistantMessage])
+            );
+
+        } catch (error) {
+            console.error("Error sending message:", error);
+            // Handle error gracefully
+            const assistantMessage: IMessage = {
+                _id: Math.random().toString(36).substring(7), // Generate unique ID
+                text: "Sorry, there was trouble connecting to the server. Please check your internet and try again.",
+                createdAt: new Date(),
+                user: assistantUser, // Use the predefined assistant user
+            };
+            // Append the assistant's message
+            setMessages((previousMessages) =>
+                GiftedChat.append(previousMessages, [assistantMessage])
+            );
+        } finally {
+            // 8. Set the typing indicator and loading back to false
+            setIsTyping(false);
+            setIsLoading(false);
         }
-
-        // 6. Create the assistant's message object
-        const assistantMessage: IMessage = {
-            _id: Math.random().toString(36).substring(7), // Generate unique ID
-            text: reply.reply,
-            createdAt: new Date(),
-            user: assistantUser, // Use the predefined assistant user
-        };
-
-        // 7. Append the assistant's message
-        setMessages((previousMessages) =>
-            GiftedChat.append(previousMessages, [assistantMessage])
-        );
-
-        // 8. Set the typing indicator and loading back to false
-        setIsTyping(false);
-        setIsLoading(false);
         
-        // --- TODO: Backend Logic ---
     }, []);
 
     // Custom Bubble Rendering
@@ -116,9 +130,7 @@ const ChatScreen = () => {
                         // User bubble is darker gray
                         backgroundColor: COLORS.userBubble,
                         paddingVertical: 4,
-                        paddingHorizontal: 8,
-                        textAlign: 'center',
-                        alignItems: 'center',
+                        paddingHorizontal: 8
                     },
                 }}
                 textStyle={{
@@ -204,7 +216,7 @@ const ChatScreen = () => {
 
 
     return (
-        <View className="flex-1 bg-black">
+        <SafeAreaView className="flex-1 bg-black">
             <StatusBar barStyle="light-content" />
                 <GiftedChat
                     messages={messages}
@@ -222,7 +234,7 @@ const ChatScreen = () => {
                     renderSend={renderSend}
                     // --- ---
                 />
-        </View>
+        </SafeAreaView>
     );
 };
 
