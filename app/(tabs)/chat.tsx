@@ -1,9 +1,11 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import {StatusBar, StyleSheet, View, Text, TouchableOpacity, KeyboardAvoidingView, Platform  } from 'react-native';
+import {StatusBar, StyleSheet, View, Text, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator, Image  } from 'react-native';
 import { GiftedChat, IMessage, User, Bubble, InputToolbar, Composer, Send } from 'react-native-gifted-chat';
 import { Ionicons } from '@expo/vector-icons'; // Import icons
 import { getReplyFromServer } from '@/lib/serverActions';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 
 // Define the structure for our user objects
 interface ChatUser extends User {
@@ -16,7 +18,7 @@ interface ChatUser extends User {
 const assistantUser: ChatUser = {
     _id: 2,
     name: 'Assistant',
-    avatar: 'https://gravatar.com/avatar/b470aa3380645d168de8491c3a959eb5?s=400&d=retro&r=x',
+    // avatar: 'https://gravatar.com/avatar/b470aa3380645d168de8491c3a959eb5?s=400&d=retro&r=x',
 };
 
 const currentUser: ChatUser = {
@@ -34,6 +36,7 @@ const COLORS = {
     inputBackground: '#111827', // gray-900
     sendButton: '#3B82F6', // blue-500
     placeholderGray: '#6B7280', // gray-500
+    red: '#ef4444', // red-500
 };
 
 const ChatScreen = () => {
@@ -93,6 +96,9 @@ const ChatScreen = () => {
             setMessages((previousMessages) =>
                 GiftedChat.append(previousMessages, [assistantMessage])
             );
+
+             // ---> 8. Trigger Haptic Feedback AFTER assistant message is added <---
+             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
         } catch (error) {
             console.error("Error sending message:", error);
@@ -200,11 +206,17 @@ const ChatScreen = () => {
 
     // Custom Send Button Rendering
     const renderSend = (props: Readonly<Send['props']>) => {
-        // Only render if there is text
+
+        const handlePress = () => {
+            // Trigger haptic feedback first
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+            // Then call the original onSend function
+            props.onSend?.({ text: props.text.trim() }, true);
+        }
              return (
                 <TouchableOpacity
                     className="bg-white rounded-full w-9 h-9 justify-center items-center mx-1" // Use NativeWind for styling
-                    onPress={() => props.onSend?.({ text: props.text.trim() }, true)} // Call original onSend
+                    onPress={handlePress} // Call original onSend
                     accessibilityLabel="Send message"
                     disabled={!props.text?.trim()}
                 >
@@ -213,18 +225,79 @@ const ChatScreen = () => {
             );
     };
 
+    // Custom Avatar Rendering Function
+    const renderCustomAvatar = (props: Readonly<Avatar['props']>) => {
+            // Check if the message is from the assistant user
+            if (props.currentMessage?.user._id === assistantUser._id) {
+              // Return null to hide the avatar for the assistant
+              return null;
+            }
+            // For other users (like the current user), Gifted Chat usually
+            // handles avatar visibility based on position (left/right).
+            // Returning the default Avatar component allows default behavior for others.
+            // If you want to hide ALL avatars, just return null here always.
+            // return <Avatar {...props} />; // Use this line *if* you wanted default avatars for others
+            return null; // This effectively hides avatars for everyone except assistant, if you used the line above.
+                         // But since GiftedChat hides current user avatar often, this mostly hides assistant avatar.
+    };
+
+    // Clears the chat and resets the session ID
+    const handleClearChat = () => {
+
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+
+        // Reset messages to the initial welcome message
+        setMessages([
+            {
+                _id: Math.random().toString(36).substring(7),
+                text: 'Hello! How can I help you with booking or company policy today?',
+                createdAt: new Date(),
+                user: assistantUser,
+            },
+        ]);
+        // Reset session ID
+        setSessionId(null);
+        // Reset loading/typing states
+        setIsLoading(false);
+        setIsTyping(false);
+        console.log("Chat cleared."); // Optional confirmation log
+    };
+
 
 
     return (
-        <SafeAreaView className="flex-1 bg-black">
+        <SafeAreaView className="flex-1 bg-black px-2">
             <StatusBar barStyle="light-content" />
-                <GiftedChat
+            
+            {/* Header */}
+            <View className="flex flex-row items-center justify-between px-3 py-2">
+                {/* back button */}
+                <TouchableOpacity onPress={() => {router.back();}}>
+                    <Ionicons name="chevron-back" size={20} color={COLORS.textWhite} />
+                </TouchableOpacity>
+
+                {/* title */}
+                <Text className="text-white text-lg font-bold">FlameChat</Text>
+
+                {/* Delete Button */}
+                <TouchableOpacity
+                    onPress={handleClearChat}
+                    className="my-2 rounded-md shadow"
+                    activeOpacity={0.7}
+                >
+                   <Ionicons name="trash-outline" size={18} color={COLORS.red} />
+                </TouchableOpacity>
+            </View> 
+
+                {/* Main chat view */}
+                <View className='flex-1 '>
+                  <GiftedChat
                     messages={messages}
                     onSend={onSend}
                     user={currentUser}
-                    placeholder='Ask the bot...' // Shortened placeholder
+                    placeholder='Ask the bot...' 
                     renderAvatarOnTop={true}
-                    alwaysShowSend={true} // Keep send button space visible
+                    alwaysShowSend={true} 
                     isTyping={isTyping}
 
                     // --- Custom Render Props ---
@@ -232,8 +305,21 @@ const ChatScreen = () => {
                     renderInputToolbar={renderInputToolbar}
                     renderComposer={renderComposer}
                     renderSend={renderSend}
+                    renderAvatar={renderCustomAvatar}
                     // --- ---
-                />
+                  />
+
+                  {/* Loading Indicator Overlay */}
+                    {/* {isLoading && (
+                        <View
+                            // Absolute positioning to overlay
+                            style={StyleSheet.absoluteFill} // Shortcut for top:0, bottom:0, left:0, right:0
+                            className="bg-black/50 justify-center items-center" // Semi-transparent background, centered
+                        >
+                            <ActivityIndicator size="large" color={COLORS.textWhite} />
+                        </View>
+                    )} */}
+                </View>
         </SafeAreaView>
     );
 };
