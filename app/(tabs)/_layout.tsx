@@ -31,7 +31,8 @@ export default function TabLayout() {
            paddingVertical: 8,
         },
         headerShown: false,
-        tabBarShowLabel: false
+        tabBarShowLabel: false,
+        tabBarHideOnKeyboard: true
       }}
     >
       <Tabs.Screen

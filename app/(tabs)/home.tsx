@@ -3,7 +3,7 @@ import { View, Text, ScrollView, SafeAreaView, StatusBar } from 'react-native';
 
 const HomeScreen = () => {
   return (
-    <SafeAreaView className="flex-1 bg-gray-950">
+    <SafeAreaView className="flex-1 bg-black">
       <StatusBar barStyle="light-content" backgroundColor={'black'} />
       <ScrollView className="flex-1 px-4 py-6">
         {/* Main Title */}

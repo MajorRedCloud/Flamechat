@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { SafeAreaView, StatusBar, StyleSheet, View, Text, TouchableOpacity, KeyboardAvoidingView, Platform  } from 'react-native';
 import { GiftedChat, IMessage, User, Bubble, InputToolbar, Composer, Send } from 'react-native-gifted-chat';
-import { TypingAnimation } from 'react-native-typing-animation';
 import { Ionicons } from '@expo/vector-icons'; // Import icons
+import { getReplyFromServer } from '@/lib/serverActions';
 
 // Define the structure for our user objects
 interface ChatUser extends User {
@@ -38,14 +38,8 @@ const COLORS = {
 const ChatScreen = () => {
     const [messages, setMessages] = useState<IMessage[]>([]);
     const [isTyping, setIsTyping] = useState(false);
-
-    const demoResponses = [
-      "Okay, I can help with that. What specific date are you looking for?",
-      "Regarding company policy, can you specify which policy you're asking about (e.g., vacation, sick leave)?",
-      "Got it. Let me check the available slots for you.",
-      "Interesting question! Let me look up the details in our knowledge base.",
-      "Sure thing. To proceed with booking, I'll need your full name and preferred time.",
-  ];
+    const [isLoading, setIsLoading] = useState(false)
+    const [sessionId, setSessionId] = useState(null)
 
     useEffect(() => {
         setMessages([
@@ -58,8 +52,7 @@ const ChatScreen = () => {
         ]);
     }, []);
 
-    const onSend = useCallback((newMessages: IMessage[] = []) => {
-        console.log('Message sent:', newMessages);
+    const onSend = useCallback(async (newMessages: IMessage[] = []) => {
 
         // 1. Append the user's message immediately
         setMessages((previousMessages) =>
@@ -68,32 +61,43 @@ const ChatScreen = () => {
 
          // 2. Set the typing indicator to true
          setIsTyping(true);
+         setIsLoading(true);
 
-         // 3. Simulate backend delay and response
-         setTimeout(() => {
-          // Choose a random response
-          const randomIndex = Math.floor(Math.random() * demoResponses.length);
-          const responseText = demoResponses[randomIndex];
+        //  3. Create JSON payload
+        const userM = newMessages[0].text
+        const payload = sessionId === null ? 
+        {
+            "query": userM
+        } : {
+            "query": userM,
+            "sessionId": sessionId
+        }
 
-          // Create the assistant's message object
-          const assistantMessage: IMessage = {
-              _id: Math.random().toString(36).substring(7), // Generate unique ID
-              text: responseText,
-              createdAt: new Date(),
-              user: assistantUser, // Use the predefined assistant user
-          };
+        // 4. Call the server action to get a response
+        const reply = await getReplyFromServer(payload)
 
-          // 4. Append the assistant's message
-          setMessages((previousMessages) =>
-              GiftedChat.append(previousMessages, [assistantMessage])
-          );
+        // 5. Set sessionId if it is null
+        if (sessionId === null) {
+            setSessionId(reply.sessionId)
+        }
 
-          // 5. Set the typing indicator back to false
-          setIsTyping(false);
+        // 6. Create the assistant's message object
+        const assistantMessage: IMessage = {
+            _id: Math.random().toString(36).substring(7), // Generate unique ID
+            text: reply.reply,
+            createdAt: new Date(),
+            user: assistantUser, // Use the predefined assistant user
+        };
 
-      }, 2000); // 1000 milliseconds = 1 second delay
+        // 7. Append the assistant's message
+        setMessages((previousMessages) =>
+            GiftedChat.append(previousMessages, [assistantMessage])
+        );
 
-
+        // 8. Set the typing indicator and loading back to false
+        setIsTyping(false);
+        setIsLoading(false);
+        
         // --- TODO: Backend Logic ---
     }, []);
 
@@ -197,26 +201,6 @@ const ChatScreen = () => {
             );
     };
 
-    const renderFooterComponent = () => {
-      if (isTyping) {
-          return (
-              // Style the container for the typing animation
-              <View style={styles.typingFooterContainer}>
-                  <TypingAnimation
-                      dotColor={COLORS.textGray} // Dots visible on dark background
-                      dotMargin={5}
-                      dotAmplitude={3}
-                      dotSpeed={0.15}
-                      dotRadius={3.5}
-                  />
-              </View>
-          );
-      }
-      // Return null when not typing
-      return null;
-  };
-
-
 
 
     return (
@@ -236,7 +220,6 @@ const ChatScreen = () => {
                     renderInputToolbar={renderInputToolbar}
                     renderComposer={renderComposer}
                     renderSend={renderSend}
-                    renderFooter={renderFooterComponent}
                     // --- ---
                 />
         </View>
@@ -244,18 +227,3 @@ const ChatScreen = () => {
 };
 
 export default ChatScreen;
-
-const styles = StyleSheet.create({
-  typingFooterContainer: {
-      // Position it on the left, just above the input
-      alignSelf: 'flex-start',
-      marginLeft: 15, // Add some left margin
-      marginBottom: 5, // Space above the input toolbar
-      // Give it a subtle background or just let animation show
-      // backgroundColor: COLORS.userBubble, // Optional background
-      // paddingHorizontal: 12,            // Optional padding
-      // paddingVertical: 8,               // Optional padding
-      // borderRadius: 15,                 // Optional border radius
-  },
-  // ... other styles if you have any
-});
