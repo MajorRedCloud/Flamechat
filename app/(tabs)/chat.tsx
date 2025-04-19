@@ -6,6 +6,8 @@ import { getReplyFromServer } from '@/lib/serverActions';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import BookingDetailsModal from '@/components/BookingDetailsModal';
+import { parseBookingDetails } from '@/constants';
 
 // Define the structure for our user objects
 interface ChatUser extends User {
@@ -26,6 +28,8 @@ const currentUser: ChatUser = {
     name: 'Demo'
 };
 
+
+
 // Define hex colors for easier use in style props
 const COLORS = {
     background: '#000000', // gray-950
@@ -44,6 +48,13 @@ const ChatScreen = () => {
     const [isTyping, setIsTyping] = useState(false);
     const [isLoading, setIsLoading] = useState(false)
     const [sessionId, setSessionId] = useState(null)
+    const [isModalVisible, setIsModalVisible] = useState(true);
+    const [bookingDetails, setBookingDetails] = useState<BookingDetails | null>({
+        id: 'TEST-123',
+        name: 'Test User',
+        dateTimeString: 'Tomorrow at 4 PM',
+        createdAt: new Date().toLocaleString()
+    });
 
     useEffect(() => {
         setMessages([
@@ -55,6 +66,7 @@ const ChatScreen = () => {
             },
         ]);
     }, []);
+
 
     const onSend = useCallback(async (newMessages: IMessage[] = []) => {
 
@@ -74,31 +86,62 @@ const ChatScreen = () => {
             "query": userM
         } : {
             "query": userM,
-            "sessionId": sessionId
+            "session_id": sessionId
         }
 
         try {
             // 4. Call the server action to get a response
             const reply = await getReplyFromServer(payload)
 
-            // 5. Set sessionId 
-            setSessionId(reply.session_id)
-            
-            // 6. Create the assistant's message object
-            const assistantMessage: IMessage = {
-                _id: Math.random().toString(36).substring(7), // Generate unique ID
-                text: reply.reply,
-                createdAt: new Date(),
-                user: assistantUser, // Use the predefined assistant user
-            };
+            // Check if reply is valid before proceeding
+            if (reply && reply.reply && reply.session_id) {
 
-            // 7. Append the assistant's message
-            setMessages((previousMessages) =>
-                GiftedChat.append(previousMessages, [assistantMessage])
-            );
+                // 5. Update session ID (using snake_case from backend)
+                setSessionId(reply.session_id);
 
-             // ---> 8. Trigger Haptic Feedback AFTER assistant message is added <---
-             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                // booking detection
+                const replyText = reply.reply;
+                const isBookingConfirmed =
+                    replyText.includes("Success!") &&
+                    replyText.includes("ID")
+
+                if (isBookingConfirmed) {
+                    // --- Call the parsing function ---
+                    const details: BookingDetails = parseBookingDetails(replyText);
+                    setBookingDetails(details);
+                    setIsModalVisible(true); 
+                }
+
+                // 6. Create assistant message
+                const assistantMessage: IMessage = {
+                    _id: Math.random().toString(36).substring(7),
+                    text: reply.reply,
+                    createdAt: new Date(),
+                    user: assistantUser,
+                };
+
+                // 7. Append assistant's message
+                setMessages((previousMessages) =>
+                    GiftedChat.append(previousMessages, [assistantMessage])
+                );
+
+                // ---> 8. Trigger Haptic Feedback AFTER assistant message is added <---
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                // Or: Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+            } else {
+                // Handle cases where reply is missing expected data
+                console.error("Invalid reply structure received:", reply);
+                // Optionally add an error message to the chat UI here
+                setMessages((previousMessages) =>
+                    GiftedChat.append(previousMessages, [{
+                         _id: Math.random().toString(36).substring(7),
+                         text: "Sorry, I received an unexpected response.",
+                         createdAt: new Date(),
+                         user: assistantUser,
+                    }])
+                );
+            }
 
         } catch (error) {
             console.error("Error sending message:", error);
@@ -119,7 +162,7 @@ const ChatScreen = () => {
             setIsLoading(false);
         }
         
-    }, []);
+    }, [sessionId]);
 
     // Custom Bubble Rendering
     const renderBubble = (props: Readonly<Bubble['props']>) => {
@@ -320,6 +363,14 @@ const ChatScreen = () => {
                         </View>
                     )} */}
                 </View>
+
+                {/* Render Confirmation Modal */}
+                <BookingDetailsModal
+                    isModalVisible={isModalVisible}
+                    onClose={() => setIsModalVisible(false)}
+                    bookingDetails={bookingDetails}
+                /> 
+
         </SafeAreaView>
     );
 };
