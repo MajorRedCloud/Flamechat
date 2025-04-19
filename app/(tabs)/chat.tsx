@@ -8,6 +8,7 @@ import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import BookingDetailsModal from '@/components/BookingDetailsModal';
 import { parseBookingDetails } from '@/constants';
+import { BookingDetails } from '@/types';
 
 // Define the structure for our user objects
 interface ChatUser extends User {
@@ -48,7 +49,7 @@ const ChatScreen = () => {
     const [isTyping, setIsTyping] = useState(false);
     const [isLoading, setIsLoading] = useState(false)
     const [sessionId, setSessionId] = useState(null)
-    const [isModalVisible, setIsModalVisible] = useState(true);
+    const [isModalVisible, setIsModalVisible] = useState(false);
     const [bookingDetails, setBookingDetails] = useState<BookingDetails | null>(null);
 
     useEffect(() => {

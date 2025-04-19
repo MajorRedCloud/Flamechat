@@ -6,7 +6,7 @@ import { Text } from 'react-native';
 // Adjust the path based on your project structure!
 import HomeIcon from '@/assets/icons/home.svg';
 import ChatIcon from '@/assets/icons/chat.svg';
-import ProfileIcon from '@/assets/icons/profile.svg';
+// import ProfileIcon from '@/assets/icons/profile.svg';
 
 export default function TabLayout() {
 
@@ -74,7 +74,7 @@ export default function TabLayout() {
           }
         }}
       />
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="profile" 
         options={{
           title: 'Profile',
@@ -93,7 +93,7 @@ export default function TabLayout() {
             );
           }
         }}
-      />
+      /> */}
     </Tabs>
   );
 }

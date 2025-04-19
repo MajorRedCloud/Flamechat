@@ -12,7 +12,9 @@ export const getReplyFromServer = async (payload : PayloadProps) => {
         })
 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorText = await response.text();
+            console.error("Backend error response:", errorText);
+            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText || 'No error message'}`);
         }
         
         const data = await response.json()
@@ -20,6 +22,7 @@ export const getReplyFromServer = async (payload : PayloadProps) => {
 
     } catch (error) {
         console.error("Error fetching reply from server:", error);
+        throw error;
     }
 
 
