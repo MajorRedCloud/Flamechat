@@ -49,12 +49,7 @@ const ChatScreen = () => {
     const [isLoading, setIsLoading] = useState(false)
     const [sessionId, setSessionId] = useState(null)
     const [isModalVisible, setIsModalVisible] = useState(true);
-    const [bookingDetails, setBookingDetails] = useState<BookingDetails | null>({
-        id: 'TEST-123',
-        name: 'Test User',
-        dateTimeString: 'Tomorrow at 4 PM',
-        createdAt: new Date().toLocaleString()
-    });
+    const [bookingDetails, setBookingDetails] = useState<BookingDetails | null>(null);
 
     useEffect(() => {
         setMessages([
