@@ -4,11 +4,9 @@ interface PayloadProps {
 }
 
 export const getReplyFromServer = async (payload : PayloadProps) => {
-    console.log("serverActions: getReplyFromServer called with payload:", JSON.stringify(payload)); // <-- Log entry and payload
 
     try {
         const apiUrl = "https://flask-backend-vercel.vercel.app/chat";
-        console.log("serverActions: Attempting fetch to:", apiUrl); // <-- Log URL
 
         const response = await fetch(apiUrl, {
             method: "PUT",
@@ -16,7 +14,6 @@ export const getReplyFromServer = async (payload : PayloadProps) => {
             body: JSON.stringify(payload)
         })
 
-        console.log("serverActions: Fetch response received. Status:", response.status, "Ok:", response.ok); // <-- Log status
 
         if (!response.ok) {
             const errorText = await response.text();
@@ -24,11 +21,9 @@ export const getReplyFromServer = async (payload : PayloadProps) => {
             throw new Error(`HTTP error! status: ${response.status}, message: ${errorText || 'No error message'}`);
         }
 
-        console.log("serverActions: Attempting to parse JSON response..."); // <-- Log before JSON parsing
         
         const data = await response.json()
 
-        console.log("serverActions: JSON parsed successfully:", JSON.stringify(data)); // <-- Log parsed data
 
         return data
 
