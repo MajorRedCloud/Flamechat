@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import {StatusBar, StyleSheet, View, Text, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator, Image  } from 'react-native';
-import { GiftedChat, IMessage, User, Bubble, InputToolbar, Composer, Send } from 'react-native-gifted-chat';
+import {StatusBar, View, Text, TouchableOpacity} from 'react-native';
+import { GiftedChat, IMessage, User, Bubble, InputToolbar, Composer } from 'react-native-gifted-chat';
 import { Ionicons } from '@expo/vector-icons'; // Import icons
 import { getReplyFromServer } from '@/lib/serverActions';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -45,7 +45,7 @@ const COLORS = {
 };
 
 const ChatScreen = () => {
-    console.log("ChatScreen: Rendering..."); // <-- Add log entry
+    console.log("ChatScreen: Rendering... v2"); // <-- Add log entry
     const [messages, setMessages] = useState<IMessage[]>([]);
     const [isTyping, setIsTyping] = useState(false);
     const [isLoading, setIsLoading] = useState(false)
@@ -65,7 +65,7 @@ const ChatScreen = () => {
     }, []);
 
 
-    const onSend = useCallback(async (newMessages: IMessage[] = []) => {
+    const onSend = async (newMessages: IMessage[] = []) => {
 
         console.log("onSend: Started"); // <-- Add
         // 1. Append the user's message immediately
@@ -179,8 +179,7 @@ const ChatScreen = () => {
         }
 
         console.log("onSend: Finished."); // <-- Add
-        
-    }, [sessionId]);
+    }
 
     // Custom Bubble Rendering
     const renderBubble = (props: Readonly<Bubble['props']>) => {
