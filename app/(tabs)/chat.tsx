@@ -45,6 +45,7 @@ const COLORS = {
 };
 
 const ChatScreen = () => {
+    console.log("ChatScreen: Rendering..."); // <-- Add log entry
     const [messages, setMessages] = useState<IMessage[]>([]);
     const [isTyping, setIsTyping] = useState(false);
     const [isLoading, setIsLoading] = useState(false)
@@ -66,14 +67,18 @@ const ChatScreen = () => {
 
     const onSend = useCallback(async (newMessages: IMessage[] = []) => {
 
+        console.log("onSend: Started"); // <-- Add
         // 1. Append the user's message immediately
         setMessages((previousMessages) =>
             GiftedChat.append(previousMessages, newMessages)
         );
+        console.log("onSend: User message appended");
 
          // 2. Set the typing indicator to true
          setIsTyping(true);
          setIsLoading(true);
+         console.log("onSend: Loading states set"); // <-- Add
+
 
         //  3. Create JSON payload
         const userM = newMessages[0].text
@@ -84,28 +89,37 @@ const ChatScreen = () => {
             "query": userM,
             "session_id": sessionId
         }
+        console.log("onSend: Payload created:", JSON.stringify(payload)); // <-- Add/Verify
 
         try {
+            console.log("onSend: Calling getReplyFromServer..."); // <-- Add
             // 4. Call the server action to get a response
             const reply = await getReplyFromServer(payload)
+            console.log("onSend: Received raw reply:", JSON.stringify(reply)); // <-- VERY IMPORTANT
 
             // Check if reply is valid before proceeding
             if (reply && reply.reply && reply.session_id) {
+                console.log("onSend: Reply structure valid."); // <-- Add
 
                 // 5. Update session ID (using snake_case from backend)
                 setSessionId(reply.session_id);
+                console.log("onSend: Session ID set to:", reply.session_id); // <-- Add
 
                 // booking detection
                 const replyText = reply.reply;
                 const isBookingConfirmed =
                     replyText.includes("Success!") &&
                     replyText.includes("ID")
+                console.log("onSend: Booking check done. Confirmed:", isBookingConfirmed); // <-- Add
+
 
                 if (isBookingConfirmed) {
                     // --- Call the parsing function ---
+                    console.log("onSend: Processing booking confirmation..."); // <-- Add
                     const details: BookingDetails = parseBookingDetails(replyText);
                     setBookingDetails(details);
                     setIsModalVisible(true); 
+                    console.log("onSend: Booking details and modal visibility set."); // <-- Add
                 }
 
                 // 6. Create assistant message
@@ -115,18 +129,22 @@ const ChatScreen = () => {
                     createdAt: new Date(),
                     user: assistantUser,
                 };
+                console.log("onSend: Assistant message object created."); // <-- Add
 
                 // 7. Append assistant's message
                 setMessages((previousMessages) =>
                     GiftedChat.append(previousMessages, [assistantMessage])
                 );
+                console.log("onSend: Assistant message appended."); // <-- Add
 
                 // ---> 8. Trigger Haptic Feedback AFTER assistant message is added <---
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                 // Or: Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                console.log("onSend: Success haptic triggered."); // <-- Add
 
             } else {
                 // Handle cases where reply is missing expected data
+                
                 console.error("Invalid reply structure received:", reply);
                 // Optionally add an error message to the chat UI here
                 setMessages((previousMessages) =>
@@ -140,7 +158,7 @@ const ChatScreen = () => {
             }
 
         } catch (error) {
-            console.error("Error sending message:", error);
+            console.error("onSend: Error caught:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
             // Handle error gracefully
             const assistantMessage: IMessage = {
                 _id: Math.random().toString(36).substring(7), // Generate unique ID
@@ -153,10 +171,14 @@ const ChatScreen = () => {
                 GiftedChat.append(previousMessages, [assistantMessage])
             );
         } finally {
+            console.log("onSend: Finally block executing."); // <-- Add
             // 8. Set the typing indicator and loading back to false
             setIsTyping(false);
             setIsLoading(false);
+            console.log("onSend: Loading states reset."); // <-- Add
         }
+
+        console.log("onSend: Finished."); // <-- Add
         
     }, [sessionId]);
 
